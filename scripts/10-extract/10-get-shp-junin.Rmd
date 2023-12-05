@@ -1,0 +1,101 @@
+---
+title: "Automated OneDrive download"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## load packages and create paths
+
+```{r}
+rm(list = ls())
+# devtools::install_github("ErickChacon/day2day")
+#
+library(googledrive)
+
+path_proj <- day2day::git_path() # arroja la direccion del proyecto
+path_data <- file.path(path_proj, "data")
+path_raw <- file.path(path_data, "raw")
+path_polygons <- file.path(path_raw, "geogpsperu")
+path_scripts <- file.path(path_proj, "scripts")
+path_10_extract <- file.path(path_scripts, "10-extract")
+
+shp_dirs <- basename(list.dirs(path_polygons, recursive = FALSE))
+path_hyo_zip <- file.path(path_polygons,shp_dirs[1], paste0("zip"))
+path_chp_zip <- file.path(path_polygons,shp_dirs[2], paste0("zip"))
+
+#shp_dirs <- grep("(CHUPACA|HUANCAYO)_JUNIN", shp_dirs, value = TRUE)
+path_hyo <- file.path(path_polygons,shp_dirs[1])
+path_chp <- file.path(path_polygons,shp_dirs[2])
+
+
+```
+
+## Processing download links - target (Huancayo, Chupaca)
+
+El archivo del cual extraemos los links de descargar cuenta con 238 links de descarga, como el estudio se realiza para las provincias de Huancayo y Chupaca solo sera necesario conseguir sus respectivos links de descarga.
+```{r}
+files <- readLines(file.path(path_10_extract,"DEPARTAMENTOS_1.js"))
+files <- sapply(files, function(x) substr(x, 1, 400), USE.NAMES = FALSE)
+#files <- grep("^\\{ \"type\":", files, value = TRUE) # all provinces¸
+file_1 <- grep("CHUPACA", files, value = TRUE)
+file_2 <- grep("HUANCAYO", files, value = TRUE)
+files <- rbind(file_1,file_2)
+
+get_link <- function (x) {
+    x <- gsub("^\\{ \"type\":.+\"LINK\": \"(https.+)\" \\}.+", "\\1", x)
+    gsub("\\\\", "", x)
+}
+
+links <- sapply(files, get_link, USE.NAMES = FALSE)
+```
+
+## Downloading links Huancayo - Chupaca
+
+```{r}
+setwd(file.path(path_polygons)) #ruta de descarga
+for (i in 1:length(links)) {
+    drive_download(links[i],
+                   overwrite = T)
+    #Sys.sleep(sample(1:10, 1)) #Tiempo de descanso entre descargas, aleatorio
+    #print(length(links) - i)  
+}
+
+unzip(path_hyo_zip, exdir = path_hyo, overwrite = TRUE)
+unzip(path_chp_zip, exdir = path_hyo, overwrite = TRUE)
+```
+
+## Getting all links
+
+Si se desea obtener todas las provincias del Perú deben ejecutar lo que sigue a continuación 
+```{r}
+# files <- readLines(file.path(path_10_extract,"DEPARTAMENTOS_1.js"))
+# files <- sapply(files, function(x) substr(x, 1, 400), USE.NAMES = FALSE)
+# files <- grep("^\\{ \"type\":", files, value = TRUE) # all provinces¸
+# 
+# get_link <- function (x) {
+#     x <- gsub("^\\{ \"type\":.+\"LINK\": \"(https.+)\" \\}.+", "\\1", x)
+#     gsub("\\\\", "", x)
+# }
+# 
+# links <- sapply(files, get_link, USE.NAMES = FALSE)
+```
+
+## Download all links
+se activa el un tiempo de descanso aleatorio entre descarga para evitar que nos cancelen el bucle
+```{r}
+# setwd(file.path(path_censo_spatial)) # ruta de descarga
+# for (i in 1:length(links)) {
+#     drive_download(links[i],
+#                    overwrite = T)
+#     Sys.sleep(sample(1:10, 1)) #Tiempo de descanso entre descargas, aleatorio
+#     print(length(links) - i)  
+# }
+```
+
+
+
+
+
