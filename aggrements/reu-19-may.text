@@ -1,0 +1,15 @@
+st_crs(spatial_data) : devuelve el sistema de coordenadas que tiene la data
+st_transform(data, st_crs(3857)) : transforma el sistema de coordenadas al 3857 que es en metros
+3857: Pseudo Mercater / metros <- el sistema que utiliza google
+
+
+
+
+
+
+
+
+
+
+
+
